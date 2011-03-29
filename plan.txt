@@ -1,0 +1,92 @@
+Salut Alex,
+
+j'ai r√l√hi √quelques √√ents suppl√entaires pour Calder :
+
+-----------------------------------------------------------------------------
+Quelques r√lexions sur le d√eloppement de CALDER v1.x
+
+***Modifications du DSL Calder***
+
+- avoir une classe CARobotShape qui sp√ifie la forme par d√aut d'un
+robot : une double ellipse avec 2 couleurs diff√entes. La taille du
+disque de communication a une valeur par d√aut que l'on doit pouvoir
+changer.
+
+- avoir des capteurs/actionneurs par d√aut sur un robot (par exemple,
+prendre l'exemple de PROTO http://proto.bbn.com/ (qui d√init 3 LEDS
+de couleurs comme actionneurs):
+
+Les noeuds ont des √ats perceptifs (sense1, sense2, sense3), ces
+√ats sont per√s par les autres noeuds.
+Par exemple (comportement d'un noeud):
+
+#si un noeud d√ecte une source sense1 alors il la led rouge s'allume ou pas.
+(self sense1)
+  ifTrue:[self red:#on]
+  ifFalse:[self red:#off]
+
+#Si un noeud se trouve √c√√d'une source sense1 (entre 1m et 3m)
+alors il allume la led blue sinon non.
+closeTo: aSource
+  d:= self distanceFrom: aSource.
+  (d<3) & (d>1)
+     ifTrue:[self blue:#on]
+     ifFalse: [self blue:#off]
+
+- pouvoir sp√ifier facilement le comportement des robots :
+Il faut pour cela organiser chaque comportement de robots sous forme
+d'une classe (un peu comme le fait le DSL algo-graph de Mondrian):
+http://www.moosetechnology.org/tools/moosealgos/graph
+Il faut d√inir une m√hode "step" qui est appel√r√uli√ement par le
+syst√e pour faire la simulation.
+
+- pouvoir sp√ifier une zone initiale avec des robots al√toirement dispos√
+Il faut vraisemblablement une sous-classe de MOViewRenderer sp√ifique
+√Calder : CAViewRenderer pour pouvoir faire cela:
+
+#D√inition d'une zone initiale dans laquelle sont cr√e les robots
+(les robots pourront bien sur √voluer au del√ de ce volume initial)
+view from:0.0@0.0 to:100.0@100.0.
+
+#Initialisation de 100 noeuds robots al√atoirement plac√ dans la vue
+avec le comportement CABehavior1
+view nodes:(1 to:100) with: #CABehavior1
+
+Ils sont uniform√ment r√partis, on pourra imaginer apr√s des
+possibilit√s de r√partition diff√rentes (r√partition radiale avec plus
+au centre et moins sur les bords).
+
+*** Modifications √ faire dans l'UI ***
+
+- pouvoir visualiser les liens de communication entre noeuds et les
+disques de communication (toggle on/off),
+- pouvoir d√placer les noeuds de mani√re libre √ la souris
+(√ventuellement par des s√lections de zone).
+- pouvoir changer l'√tat perceptif d'un noeud (sense1, sense2, ...) √ la souris.
+- Peut-√tre que relancer le script de simulation, ne relance pas toute
+la simulation: le nb de noeuds et leur localisation reste la m√me par
+exemple. Il sera alors possible de modifier les param√tres de
+simulation et le comportement des noeuds pendant le d√roulement de la
+simulation.
+
+**** Exemple complet ****
+
+view from:0@0 to:100@100.
+nodes := (1 to:100) with:#CAcloseTo.
+view nodes: nodes.
+view root interaction
+   every: 1 do: [ nodes step:#sense1];
+   refreshLayoutEvery: 10 view: view.
+
+CACloseTo>>step: aSource
+  d:= self distanceFrom: aSource.
+  (d<3) & (d>1)
+     ifTrue:[self blue:#on]
+     ifFalse: [self blue:#off]
+
+A+
+-- 
+Serge Stinckwich
+UMI UMMISCO 209 (IRD/UPMC), Hanoi, Vietnam
+Every DSL ends up being Smalltalk
+http://doesnotunderstand.org/
